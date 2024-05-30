@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  initdb:
+    image: python:3.9-slim
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: postgres://postgres:password@db:5432/lundi_matin
+    depends_on:
+      - db
+    command: >
+      bash -c "
+      apt-get update &&
+      apt-get install -y postgresql-client &&
+      pip install psycopg2-binary python-dotenv &&
+      python /app/app/init_db.py
+      "
+
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: lundi_matin
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # depends_on:
+    #   - initdb
+
+  web:
+    build: .
+    ports:
+      - "5000:5000" 
+    depends_on:
+      - db
+      - initdb
+
+volumes:
+  postgres_data:
